@@ -24,7 +24,23 @@ body {
     margin-bottom: 20px;
 }
 
-.passwordField input[type="text"],
+.passwordField {
+    display: flex;
+    align-items: center; /* Vertically center the input and button */
+}
+
+.passwordField input[type="text"] {
+    padding: 10px;
+    flex: 1; /* Make the input take up the remaining space */
+    margin-right: 10px; /* Add some space between the input and button */
+}
+
+.passwordField button {
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 2rem;
+}
+
 .directions select {
     padding: 10px;
     width: calc(100% - 20px);

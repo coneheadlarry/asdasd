@@ -1,51 +1,9 @@
-// import required modules
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const axios = require('axios');
 const fs = require('fs');
+const { spawn } = require('child_process');
 
-// function to generate a password based on given criteria
-// code is simliar to example that was given in random testing module in cs362
-// I liked it more than what i had before with random characters and ascii values
-function generatePassword(specialChars, numbers, length) {
-  const specialCharSet = '!@#$%^&*()_+[]{}|;:,.<>?';
-  const numberSet = '0123456789';
-  const letterSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
-  // validate input parameters
-  specialChars = Math.max(0, parseInt(specialChars, 5));
-  numbers = Math.max(0, parseInt(numbers, 5));
-  length = Math.max(specialChars + numbers, parseInt(length, 25)); // Ensure length is at least specialChars + numbers
-
-  // create charset and ensure it meets the requirements
-  let charset = letterSet;
-  if (specialChars > 0) charset += specialCharSet;
-  if (numbers > 0) charset += numberSet;
-
-  // generate required number of each character type
-  const passwordArray = [];
-  for (let i = 0; i < specialChars; i++) {
-    passwordArray.push(specialCharSet[Math.floor(Math.random() * specialCharSet.length)]);
-  }
-  for (let i = 0; i < numbers; i++) {
-    passwordArray.push(numberSet[Math.floor(Math.random() * numberSet.length)]);
-  }
-
-  // fill the rest with random characters from the combined charset
-  while (passwordArray.length < length) {
-    passwordArray.push(charset[Math.floor(Math.random() * charset.length)]);
-  }
-
-  // shuffle the password array for some increased randomness
-  for (let i = passwordArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [passwordArray[i], passwordArray[j]] = [passwordArray[j], passwordArray[i]];
-  }
-
-  return passwordArray.join('');
-}
-
-
-// function to create the main window
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 800,
@@ -58,7 +16,6 @@ function createWindow() {
     }
   });
 
-  // load the index.html file/homepage
   mainWindow.loadFile('index.html');
 
   // check if the file exists
@@ -91,6 +48,81 @@ function createWindow() {
     }
   });
 }
+
+// Start the password strength service
+const strengthService = spawn('python', ['C:\\Users\\Khaled\\Documents\\361\\361app\\servises\\strength_service.py']);
+strengthService.stdout.on('data', (data) => {
+  console.log(`Strength Service stdout: ${data}`);
+});
+strengthService.stderr.on('data', (data) => {
+  console.error(`Strength Service stderr: ${data}`);
+});
+strengthService.on('close', (code) => {
+  console.log(`Strength Service exited with code ${code}`);
+});
+
+// Start the enchipher service
+const enchipherService = spawn('python', ['C:\\Users\\Khaled\\Documents\\361\\361app\\servises\\enchipher.py']);
+enchipherService.stdout.on('data', (data) => {
+  console.log(`Enchipher Service stdout: ${data}`);
+});
+enchipherService.stderr.on('data', (data) => {
+  console.error(`Enchipher Service stderr: ${data}`);
+});
+enchipherService.on('close', (code) => {
+  console.log(`Enchipher Service exited with code ${code}`);
+});
+
+// Start the storage service
+const storageService = spawn('python', ['C:\\Users\\Khaled\\Documents\\361\\361app\\servises\\storage_service.py']);
+storageService.stdout.on('data', (data) => {
+  console.log(`Storage Service stdout: ${data}`);
+});
+storageService.stderr.on('data', (data) => {
+  console.error(`Storage Service stderr: ${data}`);
+});
+storageService.on('close', (code) => {
+  console.log(`Storage Service exited with code ${code}`);
+});
+
+// IPC handler to check password strength
+ipcMain.handle('check-password-strength', async (event, password) => {
+  try {
+    const response = await axios.post('http://localhost:5003/check_strength', { password });
+    return {
+      strength: response.data.score,
+      suggestions: response.data.feedback.suggestions
+    };
+  } catch (error) {
+    console.error('Error checking password strength:', error);
+    return { strength: 'Unknown', suggestions: ['Error occurred while checking password strength.'] };
+  }
+});
+
+// IPC handler to encrypt a password using the enchipher service
+ipcMain.handle('encrypt-password', async (event, password) => {
+  try {
+    const response = await axios.post('http://localhost:5001/encrypt_message', {
+      message: password,
+      shift: 5 // Assuming shift value is 5 for the Caesar cipher
+    });
+    return response.data.encrypted_message;
+  } catch (error) {
+    console.error('Error encrypting password:', error);
+    return 'Error encrypting password';
+  }
+});
+
+// IPC handler to save the encrypted password using the storage service
+ipcMain.handle('save-password', async (event, passwordData) => {
+  try {
+    const response = await axios.post('http://localhost:5002/save_password', passwordData);
+    return response.data;
+  } catch (error) {
+    console.error('Error saving password:', error);
+    return 'Error saving password';
+  }
+});
 
 // create the main window once the app is ready
 app.whenReady().then(createWindow);
@@ -189,3 +221,36 @@ ipcMain.handle('getPasswordHistory', async () => {
     return [];
   }
 });
+
+function generatePassword(specialChars, numbers, length) {
+  const specialCharSet = '!@#$%^&*()_+[]{}|;:,.<>?';
+  const numberSet = '0123456789';
+  const letterSet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+  // validate input parameters
+  specialChars = Math.min(4, Math.max(0, parseInt(specialChars, 10)));
+  numbers = Math.min(4, Math.max(0, parseInt(numbers, 10)));
+  length = Math.max(specialChars + numbers, parseInt(length, 10)); // Ensure length is at least specialChars + numbers
+
+  // generate required number of each character type
+  const passwordArray = [];
+  for (let i = 0; i < specialChars; i++) {
+    passwordArray.push(specialCharSet[Math.floor(Math.random() * specialCharSet.length)]);
+  }
+  for (let i = 0; i < numbers; i++) {
+    passwordArray.push(numberSet[Math.floor(Math.random() * numberSet.length)]);
+  }
+
+  // fill the rest with random characters from the letterSet
+  while (passwordArray.length < length) {
+    passwordArray.push(letterSet[Math.floor(Math.random() * letterSet.length)]);
+  }
+
+  // shuffle the password array for some increased randomness
+  for (let i = passwordArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [passwordArray[i], passwordArray[j]] = [passwordArray[j], passwordArray[i]];
+  }
+
+  return passwordArray.join('');
+}

@@ -1,94 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Password Generator</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div class="container">
-    <h1 class="title">Password Generator 9000</h1>
-    <p>Press "Guide" for an explanation of how certain features work. They are conveniently located to the right of each button for a given feature. A new button will be placed beside new features. 👋</p>
-    
-    <!-- password Generation Form -->
-    <form id="generateForm">
-      <div class="directions">
-        <select id="specialChars">
-          <option value="0">0 Special Characters</option>
-          <option value="1">1 Special Character</option>
-          <option value="2">2 Special Characters</option>
-          <option value="3">3 Special Characters</option>
-          <option value="4">4 Special Characters</option>
-        </select>
-        <select id="numbers">
-          <option value="0">0 Numbers</option>
-          <option value="1">1 Number</option>
-          <option value="2">2 Numbers</option>
-          <option value="3">3 Numbers</option>
-          <option value="4">4 Numbers</option>
-        </select>
-        <select id="length">
-          <option value="8">8 Characters</option>
-          <option value="10">10 Characters</option>
-          <option value="12">12 Characters</option>
-          <option value="14">14 Characters</option>
-          <option value="16">16 Characters</option>
-          <option value="18">18 Characters</option>
-          <option value="20">20 Characters</option>
-          <option value="22">22 Characters</option>
-          <option value="24">24 Characters</option>
-        </select>
-      </div>
-      <button type="button" id="generateBtn">Generate Password</button>
-      <button type="button" id="showGenerateDialog">Guide</button>
-      <button type="button" id="showNewFeatureDialog">New</button>
-    </form>
+  <head>
+    <meta charset="UTF-8">
+    <title>Password Generator</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="title">Password Generator 9000</h1>
+      <p>Press "Guide" for an explanation of how certain features work. They are
+        conveniently located to the right of each button for a given feature. A
+        new button will be placed beside new features. 👋</p>
 
-    <!-- password field -->
-    <form id="passwordField">
+      <!-- Password Generation Form -->
+      <form id="generateForm">
+        <div class="directions">
+          <select id="specialChars">
+            <option value="0">0 Special Characters</option>
+            <option value="1">1 Special Character</option>
+            <option value="2">2 Special Characters</option>
+            <option value="3">3 Special Characters</option>
+            <option value="4">4 Special Characters</option>
+          </select>
+          <select id="numbers">
+            <option value="0">0 Numbers</option>
+            <option value="1">1 Number</option>
+            <option value="2">2 Numbers</option>
+            <option value="3">3 Numbers</option>
+            <option value="4">4 Numbers</option>
+          </select>
+          <select id="length">
+            <option value="8">8 Characters</option>
+            <option value="10">10 Characters</option>
+            <option value="12">12 Characters</option>
+            <option value="14">14 Characters</option>
+            <option value="16">16 Characters</option>
+            <option value="18">18 Characters</option>
+            <option value="20">20 Characters</option>
+            <option value="22">22 Characters</option>
+            <option value="24">24 Characters</option>
+          </select>
+        </div>
+        <button type="button" id="generateBtn">Generate Password</button>
+        <button type="button" id="showGenerateDialog">Guide</button>
+        <button type="button" id="showNewFeatureDialog">New</button>
+      </form>
+
+      <!-- Password Field -->
       <div class="passwordField">
         <input type="text" id="password-input" placeholder="Password Field">
+        <button type="button" id="encryptBtn">Encrypt</button>
+        <!-- Encrypt Button -->
       </div>
-    </form>
-    <button type="button" id="HistoryBtn">History</button>
-    <button id="historyGuide">Guide</button>
 
-    <!-- dialog windows/pop-ups -->
-    <dialog id="firstOpen">
-      <p>Hello, the application supports tab navigation and the use of the enter button to interact with the UI.</p>
-      <button class="closePopUP">Close</button>
-    </dialog>
+      <!-- Password strength feedback -->
+      <p id="password-strength-feedback" style="color: red; display: none;"></p>
 
-    <dialog id="historyGuideDialog">
-      <p>Pressing the history button will display the last 5 passwords generated. The passwords will be cleared once the application is closed.</p>
-      <button class="closePopUP">Close</button>
-    </dialog>
+      <button type="button" id="HistoryBtn">History</button>
+      <button id="historyGuide">Guide</button>
 
-    <dialog id="generateGuideDialog">
-      <p>Pressing the generate password button will generate a password based on the options selected after a confirmation. The password will be displayed in the password field. There is no password storage so you are responsible for saving them.</p>
-      <button class="closePopUP">Close</button>
-    </dialog>
+      <!-- Dialog Windows/Pop-ups -->
+      <dialog id="firstOpen">
+        <p>Hello, the application supports tab navigation and the use of the
+          enter button to interact with the UI.</p>
+        <button class="closePopUP">Close</button>
+      </dialog>
 
-    <dialog id="generationConfirmDialog">
-      <p id="confirmationText"></p>
-      <button id="confirmGenerate">Generate</button>
-      <button class="closePopUP">Cancel</button>
-    </dialog>
+      <dialog id="historyGuideDialog">
+        <p>Pressing the history button will display the last 5 passwords
+          generated. The passwords will be cleared once the application is
+          closed.</p>
+        <button class="closePopUP">Close</button>
+      </dialog>
 
-    <dialog id="newFeatureDialog">
-      <p>We have made a feature where users can generate random passwords click guide for a quick explanation on how things work.</p>
-      <button class="closePopUP">Close</button>
-    </dialog>
+      <dialog id="generateGuideDialog">
+        <p>Pressing the generate password button will generate a password based
+          on the options selected after a confirmation. The password will be
+          displayed in the password field. There is no password storage so you
+          are responsible for saving them.</p>
+        <button class="closePopUP">Close</button>
+      </dialog>
 
-    <dialog id="historyDialog">
-      <h2>Password History</h2>
-      <ol id="historyList">
-        <!-- passwords will be dynamically inserted here -->
-      </ol>
-      <button class="closePopUP">Close</button>
-    </dialog>
-    
-  </div>
-  <script src="renderer.js"></script>
-</body>
+      <dialog id="generationConfirmDialog">
+        <p id="confirmationText"></p>
+        <button id="confirmGenerate">Generate</button>
+        <button class="closePopUP">Cancel</button>
+      </dialog>
+
+      <dialog id="newFeatureDialog">
+        <p>We have made a feature where users can generate random passwords
+          click guide for a quick explanation on how things work.</p>
+        <button class="closePopUP">Close</button>
+      </dialog>
+
+      <dialog id="historyDialog">
+        <h2>Password History</h2>
+        <ol id="historyList">
+          <!-- passwords will be dynamically inserted here -->
+        </ol>
+        <button class="closePopUP">Close</button>
+      </dialog>
+
+      <dialog id="serviceSelectionDialog">
+        <form id="serviceForm">
+          <h3>Enter Service Name</h3>
+          <label for="serviceInput">Service:</label>
+          <input type="text" id="serviceInput" required>
+          <menu>
+            <button type="button" class="closePopUP">Cancel</button>
+            <button id="confirmServiceSelection" type="button">OK</button>
+          </menu>
+        </form>
+      </dialog>
+
+    </div>
+    <script src="renderer.js"></script>
+  </body>
 </html>
