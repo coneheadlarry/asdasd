@@ -8,21 +8,13 @@ CORS(app)
 def caesar_cipher(text, shift):
     encrypted_text = []
     for char in text:
-        if char.isalpha():
-            shift_base = ord('A') if char.isupper() else ord('a')
-            encrypted_char = chr(
-                (ord(char) - shift_base + shift) % 26 + shift_base)
-            encrypted_text.append(encrypted_char)
-        else:
-            encrypted_char = chr((ord(char) + shift) % 128 if (ord(char) + shift)
-                                 >= 0 else 128 + (ord(char) + shift) % 128)
-            encrypted_text.append(encrypted_char)
+        encrypted_char = chr((ord(char) + shift) % 128)
+        encrypted_text.append(encrypted_char)
     return ''.join(encrypted_text)
 
 
 @app.route('/encrypt_message', methods=['POST'])
 def encrypt_message():
-
     data = request.json
     app.logger.debug(f"Received data: {data}")
     if not data or 'message' not in data or 'shift' not in data:

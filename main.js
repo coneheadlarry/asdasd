@@ -1,3 +1,4 @@
+// The existing content of your main.js
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const axios = require('axios');
@@ -18,16 +19,16 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
 
-  // check if the file exists
+  // Check if the file exists
   const firstOpenPath = path.join(__dirname, 'firstOpen.txt');
   fs.access(firstOpenPath, fs.constants.F_OK, (err) => {
     if (err) {
-      // file does not exist, create it
+      // File does not exist, create it
       fs.writeFile(firstOpenPath, 'True', (err) => {
         if (err) console.error('Error creating file:', err);
       });
     } else {
-      // file exists, read it
+      // File exists, read it
       fs.readFile(firstOpenPath, 'utf8', (err, data) => {
         if (err) console.error('Error reading file:', err);
         if (data.trim() === 'True') {
@@ -37,11 +38,11 @@ function createWindow() {
     }
   });
 
-  // create JSON file to track generation history
+  // Create JSON file to track generation history
   const generationHistoryPath = path.join(__dirname, 'generationHistory.json');
   fs.access(generationHistoryPath, fs.constants.F_OK, (err) => {
     if (err) {
-      // file does not exist, create it
+      // File does not exist, create it
       fs.writeFile(generationHistoryPath, '[]', (err) => {
         if (err) console.error('Error creating file:', err);
       });
@@ -85,6 +86,18 @@ storageService.on('close', (code) => {
   console.log(`Storage Service exited with code ${code}`);
 });
 
+// Start the reminder service
+const reminderService = spawn('python', ['C:\\Users\\Khaled\\Documents\\361\\361app\\servises\\reminder_service.py']);
+reminderService.stdout.on('data', (data) => {
+  console.log(`Reminder Service stdout: ${data}`);
+});
+reminderService.stderr.on('data', (data) => {
+  console.error(`Reminder Service stderr: ${data}`);
+});
+reminderService.on('close', (code) => {
+  console.log(`Reminder Service exited with code ${code}`);
+});
+
 // IPC handler to check password strength
 ipcMain.handle('check-password-strength', async (event, password) => {
   try {
@@ -113,6 +126,20 @@ ipcMain.handle('encrypt-password', async (event, password) => {
   }
 });
 
+// IPC handler to decrypt a password using the enchipher service
+ipcMain.handle('decrypt-password', async (event, encryptedPassword) => {
+  try {
+    const response = await axios.post('http://localhost:5001/encrypt_message', {
+      message: encryptedPassword,
+      shift: -5 // Use a negative shift to decrypt
+    });
+    return response.data.encrypted_message; // Assuming the service uses the same endpoint for encryption and decryption
+  } catch (error) {
+    console.error('Error decrypting password:', error);
+    return 'Error decrypting password';
+  }
+});
+
 // IPC handler to save the encrypted password using the storage service
 ipcMain.handle('save-password', async (event, passwordData) => {
   try {
@@ -121,6 +148,37 @@ ipcMain.handle('save-password', async (event, passwordData) => {
   } catch (error) {
     console.error('Error saving password:', error);
     return 'Error saving password';
+  }
+});
+
+// IPC handler to get stored passwords
+ipcMain.handle('get-passwords', async () => {
+  try {
+    const response = await axios.get('http://localhost:5002/get_passwords');
+    return response.data;
+  } catch (error) {
+    console.error('Error retrieving passwords:', error);
+    return [];
+  }
+});
+
+// IPC handler to check password reminders
+ipcMain.handle('check-reminders', async () => {
+  try {
+    const response = await axios.get('http://localhost:5002/get_passwords');
+    const passwords = response.data;
+
+    const now = new Date();
+    const reminders = passwords.filter(password => {
+      const lastUpdated = new Date(password.last_updated_at);
+      const ageInMonths = (now.getFullYear() - lastUpdated.getFullYear()) * 12 + (now.getMonth() - lastUpdated.getMonth());
+      return (ageInMonths >= 3 && ageInMonths < 4) || ageInMonths >= 4;
+    });
+
+    return reminders;
+  } catch (error) {
+    console.error('Error checking reminders:', error);
+    return [];
   }
 });
 
@@ -218,6 +276,20 @@ ipcMain.handle('getPasswordHistory', async () => {
     return history;
   } catch (err) {
     console.error('Error reading password history:', err);
+    return [];
+  }
+});
+
+// IPC handler to get password reminders using the reminder service
+ipcMain.handle('get-password-reminders', async () => {
+  try {
+    const filePath = path.join(__dirname, 'passwords.json');
+    const response = await axios.post('http://localhost:5004/get_reminders', {
+      file_path: filePath
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error retrieving password reminders:', error);
     return [];
   }
 });

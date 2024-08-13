@@ -59,6 +59,30 @@
       <button type="button" id="HistoryBtn">History</button>
       <button id="historyGuide">Guide</button>
 
+      <div id="custom-success-message" style="display: none; color: green; text-align: center; margin-top: 10px;">
+        Password encrypted and saved successfully.
+      </div>
+
+      <!-- Add these elements at the bottom of your HTML page -->
+      <div>
+        <input type="text" id="serviceRetrieveInput" placeholder="Enter service name">
+        <button type="button" id="retrieveBtn">Retrieve</button>
+        <p id="retrieveMessage" style="display:none;"></p>
+      </div>
+      
+
+      <button id="reminderBtn">Show Password Reminders</button>
+
+      <dialog id="reminderDialog">
+        <h3>Password Reminders</h3>
+        <ul id="reminderList"></ul>
+        <menu>
+          <button id="closeReminderDialog">Close</button>
+        </menu>
+      </dialog>
+      
+
+
       <!-- Dialog Windows/Pop-ups -->
       <dialog id="firstOpen">
         <p>Hello, the application supports tab navigation and the use of the
@@ -113,6 +137,8 @@
         </form>
       </dialog>
 
+
+      
     </div>
     <script src="renderer.js"></script>
   </body>

@@ -45,6 +45,7 @@ def save_password():
 
     # If service name doesn't exist, add a new entry
     data['created_at'] = datetime.now().strftime("%Y-%m-%d")
+    data['last_updated_at'] = data['created_at']  # Set last_updated_at to the creation date initially
     passwords.append(data)
     save_passwords(passwords)
     return jsonify({'message': 'Password saved successfully'}), 201

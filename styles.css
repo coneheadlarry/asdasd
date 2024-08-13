@@ -82,3 +82,19 @@ dialog {
 li {
     padding: 3rem;
 }
+
+.retrieve-password-section {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  #retrieve-service-input {
+    width: 200px;
+    padding: 5px;
+    margin-right: 10px;
+  }
+  
+  #retrieveBtn {
+    padding: 5px 10px;
+  }
+  

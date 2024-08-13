@@ -25,11 +25,30 @@ window.addEventListener('DOMContentLoaded', async () => {
   const passwordInput = document.getElementById('password-input');
   const passwordStrengthFeedback = document.getElementById('password-strength-feedback');
 
+  const retrieveBtn = document.getElementById('retrieveBtn');
+  const serviceRetrieveInput = document.getElementById('serviceRetrieveInput');
+  const retrieveMessage = document.getElementById('retrieveMessage');
+
+  const reminderBtn = document.getElementById('reminderBtn');
+  const reminderList = document.getElementById('reminderList');
+  const reminderDialog = document.getElementById('reminderDialog');
+  const closeReminderDialog = document.getElementById('closeReminderDialog');
+
   const serviceWarning = document.createElement('p');
   serviceWarning.style.color = 'red';
   serviceWarning.style.display = 'none';
   serviceWarning.textContent = 'Please enter a service name.';
   serviceSelectionDialog.querySelector('form').insertBefore(serviceWarning, serviceSelectionDialog.querySelector('menu'));
+
+  // Custom success message
+  const customSuccessMessage = document.createElement('div');
+  customSuccessMessage.id = 'custom-success-message';
+  customSuccessMessage.style.display = 'none';
+  customSuccessMessage.style.color = 'green';
+  customSuccessMessage.style.textAlign = 'center';
+  customSuccessMessage.style.marginTop = '10px';
+  customSuccessMessage.textContent = 'Password encrypted and saved successfully.';
+  document.body.appendChild(customSuccessMessage);
 
   // Check if it's the first time the app is opened
   try {
@@ -151,7 +170,8 @@ window.addEventListener('DOMContentLoaded', async () => {
         const saveResult = await window.electron.savePassword({ service_name: serviceName, password: encryptedPassword });
         console.log('Save result:', saveResult);
 
-        alert('Password encrypted and saved successfully.');
+        // Show custom success message
+        showCustomSuccessMessage();
       } catch (error) {
         console.error('Error encrypting or saving the password:', error);
         alert('Failed to encrypt and save the password.');
@@ -184,6 +204,77 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Add event listener to Retrieve button
+  retrieveBtn.addEventListener('click', async () => {
+    const serviceName = serviceRetrieveInput.value;
+
+    if (serviceName) {
+      try {
+        // Retrieve stored passwords
+        const passwords = await window.electron.getPasswords();
+        const matchedPassword = passwords.find(p => p.service_name === serviceName);
+
+        if (matchedPassword) {
+          // Decrypt the password using enchipher.py service with a negative shift
+          const decryptedPassword = await window.electron.decryptPassword(matchedPassword.password);
+          console.log(`Decrypted password: ${decryptedPassword}`);
+
+          // Place the decrypted password onto the clipboard
+          await navigator.clipboard.writeText(decryptedPassword);
+
+          retrieveMessage.textContent = `Password for ${serviceName} has been copied to the clipboard.`;
+          retrieveMessage.style.color = 'green';
+        } else {
+          retrieveMessage.textContent = `Service name ${serviceName} not found.`;
+          retrieveMessage.style.color = 'red';
+        }
+      } catch (error) {
+        console.error('Error retrieving or decrypting password:', error);
+        retrieveMessage.textContent = 'Error occurred while retrieving the password.';
+        retrieveMessage.style.color = 'red';
+      }
+    } else {
+      retrieveMessage.textContent = 'Please enter a service name.';
+      retrieveMessage.style.color = 'red';
+    }
+
+    retrieveMessage.style.display = 'block';
+    setTimeout(() => {
+      retrieveMessage.style.display = 'none';
+      serviceRetrieveInput.focus();
+    }, 5000);
+  });
+
+  // Add event listener to Show Password Reminders button
+  reminderBtn.addEventListener('click', async () => {
+    try {
+      // Fetch reminders from the reminder service
+      const reminders = await window.electron.getPasswordReminders();
+      reminderList.innerHTML = '';
+
+      if (reminders.length > 0) {
+        reminders.forEach(reminder => {
+          const listItem = document.createElement('li');
+          listItem.textContent = `Service: ${reminder.service_name} - Last updated: ${reminder.last_updated_at}`;
+          reminderList.appendChild(listItem);
+        });
+      } else {
+        const noRemindersItem = document.createElement('li');
+        noRemindersItem.textContent = 'No password reminders needed.';
+        reminderList.appendChild(noRemindersItem);
+      }
+
+      reminderDialog.showModal();
+    } catch (error) {
+      console.error('Error fetching password reminders:', error);
+    }
+  });
+
+  // Close button for the reminder dialog
+  closeReminderDialog.addEventListener('click', () => {
+    reminderDialog.close();
+  });
+
   // Function to update the password feedback with custom recommendations
   async function updatePasswordFeedback(password) {
     const feedback = await window.electron.checkPasswordStrength(password);
@@ -201,12 +292,23 @@ window.addEventListener('DOMContentLoaded', async () => {
       recommendations.push('Add numbers.');
     }
 
-    if (feedback.strength === 4) { // Assuming the maximum score is 4
+    if (feedback.strength === 4) { 
       feedbackElement.textContent = "Password Strength: Maximum - Your password is at maximum strength.";
     } else {
       feedbackElement.textContent = `Password Strength: ${feedback.strength} - ${recommendations.join(', ')}`;
     }
 
     feedbackElement.style.display = 'block';
+  }
+
+  // Function to show success message and handle focus
+  function showCustomSuccessMessage() {
+    const successMessage = document.getElementById('custom-success-message');
+    successMessage.style.display = 'block';
+    
+    setTimeout(() => {
+      successMessage.style.display = 'none';
+      passwordInput.focus(); 
+    }, 10000); 
   }
 });

@@ -11,5 +11,11 @@ contextBridge.exposeInMainWorld('electron', {
 
   // New methods for encrypting and saving passwords
   encryptPassword: (password) => ipcRenderer.invoke('encrypt-password', password),
-  savePassword: (passwordData) => ipcRenderer.invoke('save-password', passwordData)
+  savePassword: (passwordData) => ipcRenderer.invoke('save-password', passwordData),
+
+  getPasswords: () => ipcRenderer.invoke('get-passwords'),
+  decryptPassword: (encryptedPassword) => ipcRenderer.invoke('decrypt-password', encryptedPassword),
+
+  // Add the getPasswordReminders method here
+  getPasswordReminders: () => ipcRenderer.invoke('get-password-reminders')
 });
